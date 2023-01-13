@@ -137,4 +137,37 @@ server.post('/status', async (request, response) => {
   response.sendStatus(200);
 });
 
+function removeInactives() {
+  const TIME_LIMIT = 10000 // * in milliseconds
+
+  setInterval(async () => {
+    const deltaTime = Date.now() - TIME_LIMIT
+
+    try {
+      const participants = await db.collection('participants').find().toArray()
+
+      participants.forEach(async ({ lastStatus, name, _id }) => {
+
+        if (lastStatus < deltaTime) {
+          await db.collection('participants').deleteOne({ _id: ObjectId(_id) })
+
+          await db.collection('messages').insertOne({
+            from: name,
+            to: 'Todos',
+            text: 'sai da sala...',
+            type: 'status',
+            time: dayjs(Date.now()).format('HH:mm:ss')
+          })
+        }
+      })
+
+    } catch (err) {
+      console.log('Erro')
+      return res.sendStatus(500)
+    }
+
+  }, TIME_LIMIT)
+}
+removeInactives();
+
 server.listen(PORT, () => console.log(`Listening on port ${PORT}`));
