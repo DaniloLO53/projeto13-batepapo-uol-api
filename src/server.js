@@ -52,10 +52,11 @@ server.post('/participants', async (request, response) => {
 
 server.get('/participants', async (request, response) => {
   try {
-    const participants = await db.collection('participants').findMany().toArray();
-    response.status(200).send(participants);
+    const participants = await db.collection('participants').find().toArray();
+    return response.status(200).send(participants);
+
   } catch (error) {
-    response.sendStatus(500);
+    return response.status(500).send('ERRO');
   }
 });
 
@@ -78,7 +79,7 @@ server.post('/messages', async (request, response) => {
 
     await db.collection('participants').insertOne(finalMessageFormat);
 
-    response.sendStatus(201);
+    return response.sendStatus(201);
   } catch (error) {
     console.log('Erro');
 
@@ -92,7 +93,7 @@ server.get('/messages', async (request, response) => {
   const { user } = request.headers;
 
   try {
-    const messages = await db.collection('messages').findMany({
+    const messages = await db.collection('messages').find({
       $or: [
         {
           type: 'public'
@@ -134,7 +135,7 @@ server.post('/status', async (request, response) => {
 
   await db.collection('participants').updateOne({ name: user }, { $set: { lastStatus: Date.now() } });
 
-  response.sendStatus(200);
+  return response.sendStatus(200);
 });
 
 function removeInactives() {
@@ -163,7 +164,6 @@ function removeInactives() {
 
     } catch (err) {
       console.log('Erro')
-      return res.sendStatus(500)
     }
 
   }, TIME_LIMIT)
