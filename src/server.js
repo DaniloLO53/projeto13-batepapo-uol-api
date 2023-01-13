@@ -36,9 +36,18 @@ server.post('/participants', async (request, response) => {
 
     if (alreadyExist) return response.status(409).send('Already signed up');
 
+    const now = Date.now();
+
     await db.collection('participants').insertOne({
       name,
-      lastStatus: Date.now(),
+      lastStatus: now,
+    });
+    await db.collection('messages').insertOne({
+      from: name,
+      to: 'Todos',
+      text: 'entra na sala...',
+      type: 'status',
+      time: dayjs(now).format('HH:mm:ss'),
     });
 
     response.sendStatus(201);
@@ -77,7 +86,7 @@ server.post('/messages', async (request, response) => {
       time: dayjs(Date.now()).format('HH:mm:ss'),
     };
 
-    await db.collection('participants').insertOne(finalMessageFormat);
+    await db.collection('messages').insertOne(finalMessageFormat);
 
     return response.sendStatus(201);
   } catch (error) {
