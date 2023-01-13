@@ -87,4 +87,54 @@ server.post('/messages', async (request, response) => {
   }
 });
 
+server.get('/messages', async (request, response) => {
+  const { limit } = request.query;
+  const { user } = request.headers;
+
+  try {
+    const messages = await db.collection('messages').findMany({
+      $or: [
+        {
+          type: 'public'
+        },
+        {
+          type: 'status'
+        },
+        {
+          to: user,
+          type: 'private'
+        },
+        {
+          type: 'private',
+          from: user
+        }
+      ]
+    }).toArray();
+
+    if (limit) {
+      if (Number(limit) < 1 || isNaN(Number(limit))) return response.sendStatus(422);
+
+      return response.send([...messages].slice(-Number(limit)).reverse());
+    }
+
+    return response.send([...messages].reverse());
+
+  } catch (err) {
+    console.log(err)
+
+    return response.sendStatus(500)
+  }
+});
+
+server.post('/status', async (request, response) => {
+  const { user } = request.headers;
+
+  const participantSignedUp = await db.collection('participants').findOne({ name: user });
+  if (!participantSignedUp) return response.sendStatus(404);
+
+  await db.collection('participants').updateOne({ name: user }, { $set: { lastStatus: Date.now() } });
+
+  response.sendStatus(200);
+});
+
 server.listen(PORT, () => console.log(`Listening on port ${PORT}`));
