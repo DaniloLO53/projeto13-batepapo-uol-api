@@ -75,14 +75,14 @@ server.post('/messages', async (request, response) => {
   const { to, text, type } = data;
 
   try {
-    const message = messageSchema.validateAsync(data);
+    const message = await messageSchema.validateAsync(data);
     const isParticipant = await db.collection('participants').findOne({ name: user });
 
-    if (!isParticipant) return response.status(422);
+    if (!isParticipant) return response.sendStatus(422);
 
     const finalMessageFormat = {
-      ...message,
       from: user,
+      ...message,
       time: dayjs(Date.now()).format('HH:mm:ss'),
     };
 
