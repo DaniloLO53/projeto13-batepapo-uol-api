@@ -98,41 +98,36 @@ server.post('/messages', async (request, response) => {
 });
 
 server.get('/messages', async (request, response) => {
-  const { limit } = request.query;
+  const { query } = request;
   const { user } = request.headers;
 
   try {
     const messages = await db.collection('messages').find({
       $or: [
         {
-          type: 'public'
-        },
-        {
-          type: 'status'
+          from: user,
         },
         {
           to: user,
-          type: 'private'
         },
         {
-          type: 'private',
-          from: user
-        }
+          to: 'Todos',
+        },
       ]
     }).toArray();
 
-    if (limit) {
-      if (Number(limit) < 1 || isNaN(Number(limit))) return response.sendStatus(422);
+    if (query.limit) {
+      if (Number(query.limit) < 1 || isNaN(Number(query.limit))) return response.sendStatus(422);
 
-      return response.send([...messages].slice(-Number(limit)).reverse());
+      return response.send([...messages].slice(-Number(query.limit)).reverse());
     }
 
     return response.send([...messages].reverse());
 
-  } catch (err) {
-    console.log(err)
+  } catch (error) {
+    console.log('ERRO');
 
-    return response.sendStatus(500)
+    return response.sendStatus(500);
   }
 });
 
