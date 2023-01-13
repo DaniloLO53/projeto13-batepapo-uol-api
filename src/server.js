@@ -49,4 +49,13 @@ server.post('/participants', async (request, response) => {
   }
 });
 
+server.get('/participants', async (request, response) => {
+  try {
+    const participants = await db.collection('participants').findMany().toArray();
+    response.status(200).send(participants);
+  } catch (error) {
+    response.sendStatus(500);
+  }
+});
+
 server.listen(PORT, () => console.log(`Listening on port ${PORT}`));
